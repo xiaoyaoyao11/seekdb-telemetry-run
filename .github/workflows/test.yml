@@ -25,13 +25,4 @@ jobs:
           echo "=== seekdb.log tail ==="
           tail -30 /tmp/seekdb.log 2>&1
       - name: Print telemetry ID
-        run: |
-          python3 - <<'EOF'
-import json
-try:
-    d = json.load(open("/var/lib/seekdb/run/telemetry.json"))
-    print("TELEMETRY_ID=" + d["content"]["id"])
-    print("ID_LEN=" + str(len(d["content"]["id"])))
-except Exception as e:
-    print("ERR " + str(e))
-EOF
+        run: python3 -c "import json; d=json.load(open('/var/lib/seekdb/run/telemetry.json')); print('TELEMETRY_ID=' + d['content']['id']); print('ID_LEN=' + str(len(d['content']['id'])))"
