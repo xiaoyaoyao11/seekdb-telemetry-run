@@ -1,0 +1,38 @@
+name: seekdb-telemetry
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download seekdb 1.4.0 deb
+        run: curl -L --max-time 300 -o /tmp/seekdb.deb "https://github.com/oceanbase/seekdb/releases/download/v1.4.0/seekdb_1.4.0-100000212026082616ubuntu22.04_amd64.deb" && ls -la /tmp/seekdb.deb
+      - name: Install seekdb
+        run: |
+          sudo dpkg -i /tmp/seekdb.deb || sudo apt-get -y -f install
+          ls -la /usr/bin/seekdb 2>/dev/null || true
+          cat /etc/seekdb/seekdb.cnf 2>/dev/null || true
+      - name: Start seekdb and wait for telemetry
+        run: |
+          sudo mkdir -p /var/lib/seekdb
+          sudo nohup /usr/bin/seekdb --nodaemon --base-dir=/var/lib/seekdb > /tmp/seekdb.log 2>&1 &
+          for i in $(seq 1 120); do
+            if [ -f /var/lib/seekdb/run/telemetry.json ]; then echo "TELEMETRY_READY after ${i}x2s"; break; fi
+            sleep 2
+          done
+          echo "=== telemetry.json ==="
+          cat /var/lib/seekdb/run/telemetry.json 2>&1 || echo NO_TELEMETRY
+          echo "=== seekdb.log tail ==="
+          tail -30 /tmp/seekdb.log 2>&1
+      - name: Print telemetry ID
+        run: |
+          python3 - <<'EOF'
+import json
+try:
+    d = json.load(open("/var/lib/seekdb/run/telemetry.json"))
+    print("TELEMETRY_ID=" + d["content"]["id"])
+    print("ID_LEN=" + str(len(d["content"]["id"])))
+except Exception as e:
+    print("ERR " + str(e))
+EOF
