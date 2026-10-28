@@ -1,13 +1,13 @@
 name: seekdb-telemetry
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Download seekdb 1.4.0 deb
-        run: curl -L --max-time 300 -o /tmp/seekdb.deb "https://github.com/oceanbase/seekdb/releases/download/v1.4.0/seekdb_1.4.0-100000212026082616ubuntu22.04_amd64.deb" && ls -la /tmp/seekdb.deb
+        run: curl -L --max-time 600 -o /tmp/seekdb.deb "https://github.com/oceanbase/seekdb/releases/download/v1.4.0/seekdb_1.4.0-100000212026082616ubuntu24.04_amd64.deb" && ls -la /tmp/seekdb.deb
       - name: Install seekdb
         run: |
           sudo dpkg -i /tmp/seekdb.deb || sudo apt-get -y -f install
